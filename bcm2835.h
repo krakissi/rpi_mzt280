@@ -233,26 +233,24 @@
 
 /// \brief bcm2835PortFunction
 /// Port function select modes for bcm2845_gpio_fsel()
-typedef enum
-{
-    BCM2835_GPIO_FSEL_INPT  = 0b000,   ///< Input
-    BCM2835_GPIO_FSEL_OUTP  = 0b001,   ///< Output
-    BCM2835_GPIO_FSEL_ALT0  = 0b100,   ///< Alternate function 0
-    BCM2835_GPIO_FSEL_ALT1  = 0b101,   ///< Alternate function 1
-    BCM2835_GPIO_FSEL_ALT2  = 0b110,   ///< Alternate function 2
-    BCM2835_GPIO_FSEL_ALT3  = 0b111,   ///< Alternate function 3
-    BCM2835_GPIO_FSEL_ALT4  = 0b011,   ///< Alternate function 4
-    BCM2835_GPIO_FSEL_ALT5  = 0b010,   ///< Alternate function 5
-    BCM2835_GPIO_FSEL_MASK  = 0b111    ///< Function select bits mask
+typedef enum {
+	BCM2835_GPIO_FSEL_INPT  = 0b000,   ///< Input
+	BCM2835_GPIO_FSEL_OUTP  = 0b001,   ///< Output
+	BCM2835_GPIO_FSEL_ALT0  = 0b100,   ///< Alternate function 0
+	BCM2835_GPIO_FSEL_ALT1  = 0b101,   ///< Alternate function 1
+	BCM2835_GPIO_FSEL_ALT2  = 0b110,   ///< Alternate function 2
+	BCM2835_GPIO_FSEL_ALT3  = 0b111,   ///< Alternate function 3
+	BCM2835_GPIO_FSEL_ALT4  = 0b011,   ///< Alternate function 4
+	BCM2835_GPIO_FSEL_ALT5  = 0b010,   ///< Alternate function 5
+	BCM2835_GPIO_FSEL_MASK  = 0b111    ///< Function select bits mask
 } bcm2835FunctionSelect;
 
 /// \brief bcm2835PUDControl
 /// Pullup/Pulldown defines for bcm2845_gpio_pud()
-typedef enum
-{
-    BCM2835_GPIO_PUD_OFF     = 0b00,   ///< Off ? disable pull-up/down
-    BCM2835_GPIO_PUD_DOWN    = 0b01,   ///< Enable Pull Down control
-    BCM2835_GPIO_PUD_UP      = 0b10    ///< Enable Pull Up control
+typedef enum {
+	BCM2835_GPIO_PUD_OFF     = 0b00,   ///< Off ? disable pull-up/down
+	BCM2835_GPIO_PUD_DOWN    = 0b01,   ///< Enable Pull Down control
+	BCM2835_GPIO_PUD_UP      = 0b10    ///< Enable Pull Up control
 } bcm2835PUDControl;
 
 /// Pad control register offsets from BCM2835_GPIO_PADS
@@ -290,25 +288,24 @@ typedef enum
 /// At bootup, pins 8 and 10 are set to UART0_TXD, UART0_RXD (ie the alt0 function) respectively
 /// When SPI0 is in use (ie after bcm2835_spi_begin()), pins 19, 21, 23, 24, 26 are dedicated to SPI
 /// and cant be controlled independently
-typedef enum
-{
-    RPI_GPIO_P1_03        =  0,  ///< Pin P1-03
-    RPI_GPIO_P1_05        =  1,  ///< Pin P1-05
-    RPI_GPIO_P1_07        =  4,  ///< Pin P1-07
-    RPI_GPIO_P1_08        = 14,  ///< Pin P1-08, defaults to alt function 0 UART0_TXD
-    RPI_GPIO_P1_10        = 15,  ///< Pin P1-10, defaults to alt function 0 UART0_RXD
-    RPI_GPIO_P1_11        = 17,  ///< Pin P1-11
-    RPI_GPIO_P1_12        = 18,  ///< Pin P1-12
-    RPI_GPIO_P1_13        = 21,  ///< Pin P1-13
-    RPI_GPIO_P1_15        = 22,  ///< Pin P1-15
-    RPI_GPIO_P1_16        = 23,  ///< Pin P1-16
-    RPI_GPIO_P1_18        = 24,  ///< Pin P1-18
-    RPI_GPIO_P1_19        = 10,  ///< Pin P1-19, MOSI when SPI0 in use
-    RPI_GPIO_P1_21        =  9,  ///< Pin P1-21, MISO when SPI0 in use
-    RPI_GPIO_P1_22        = 25,  ///< Pin P1-22
-    RPI_GPIO_P1_23        = 11,  ///< Pin P1-23, CLK when SPI0 in use
-    RPI_GPIO_P1_24        =  8,  ///< Pin P1-24, CE0 when SPI0 in use
-    RPI_GPIO_P1_26        =  7   ///< Pin P1-26, CE1 when SPI0 in use
+typedef enum {
+	RPI_GPIO_P1_03        =  0,  ///< Pin P1-03
+	RPI_GPIO_P1_05        =  1,  ///< Pin P1-05
+	RPI_GPIO_P1_07        =  4,  ///< Pin P1-07
+	RPI_GPIO_P1_08        = 14,  ///< Pin P1-08, defaults to alt function 0 UART0_TXD
+	RPI_GPIO_P1_10        = 15,  ///< Pin P1-10, defaults to alt function 0 UART0_RXD
+	RPI_GPIO_P1_11        = 17,  ///< Pin P1-11
+	RPI_GPIO_P1_12        = 18,  ///< Pin P1-12
+	RPI_GPIO_P1_13        = 21,  ///< Pin P1-13
+	RPI_GPIO_P1_15        = 22,  ///< Pin P1-15
+	RPI_GPIO_P1_16        = 23,  ///< Pin P1-16
+	RPI_GPIO_P1_18        = 24,  ///< Pin P1-18
+	RPI_GPIO_P1_19        = 10,  ///< Pin P1-19, MOSI when SPI0 in use
+	RPI_GPIO_P1_21        =  9,  ///< Pin P1-21, MISO when SPI0 in use
+	RPI_GPIO_P1_22        = 25,  ///< Pin P1-22
+	RPI_GPIO_P1_23        = 11,  ///< Pin P1-23, CLK when SPI0 in use
+	RPI_GPIO_P1_24        =  8,  ///< Pin P1-24, CE0 when SPI0 in use
+	RPI_GPIO_P1_26        =  7   ///< Pin P1-26, CE1 when SPI0 in use
 } RPiGPIOPin;
 
 /// Defines for SPI
@@ -351,54 +348,50 @@ typedef enum
 
 /// \brief bcm2835SPIBitOrder
 /// Specifies the SPI data bit ordering
-typedef enum
-{
-    BCM2835_SPI_BIT_ORDER_LSBFIRST = 0,  ///< LSB First
-    BCM2835_SPI_BIT_ORDER_MSBFIRST = 1   ///< MSB First
-}bcm2835SPIBitOrder;
+typedef enum {
+	BCM2835_SPI_BIT_ORDER_LSBFIRST = 0,  ///< LSB First
+	BCM2835_SPI_BIT_ORDER_MSBFIRST = 1   ///< MSB First
+} bcm2835SPIBitOrder;
 
 /// \brief bcm2835SPIMode
 /// Specify the SPI data mode
-typedef enum
-{
-    BCM2835_SPI_MODE0 = 0,  ///< CPOL = 0, CPHA = 0
-    BCM2835_SPI_MODE1 = 1,  ///< CPOL = 0, CPHA = 1
-    BCM2835_SPI_MODE2 = 2,  ///< CPOL = 1, CPHA = 0
-    BCM2835_SPI_MODE3 = 3,  ///< CPOL = 1, CPHA = 1
-}bcm2835SPIMode;
+typedef enum {
+	BCM2835_SPI_MODE0 = 0,  ///< CPOL = 0, CPHA = 0
+	BCM2835_SPI_MODE1 = 1,  ///< CPOL = 0, CPHA = 1
+	BCM2835_SPI_MODE2 = 2,  ///< CPOL = 1, CPHA = 0
+	BCM2835_SPI_MODE3 = 3,  ///< CPOL = 1, CPHA = 1
+} bcm2835SPIMode;
 
 /// \brief bcm2835SPIChipSelect
 /// Specify the SPI chip select pin(s)
-typedef enum
-{
-    BCM2835_SPI_CS0 = 0,     ///< Chip Select 0
-    BCM2835_SPI_CS1 = 1,     ///< Chip Select 1
-    BCM2835_SPI_CS2 = 2,     ///< Chip Select 2 (ie pins CS1 and CS2 are asserted)
-    BCM2835_SPI_CS_NONE = 3, ///< No CS, control it yourself
+typedef enum {
+	BCM2835_SPI_CS0 = 0,     ///< Chip Select 0
+	BCM2835_SPI_CS1 = 1,     ///< Chip Select 1
+	BCM2835_SPI_CS2 = 2,     ///< Chip Select 2 (ie pins CS1 and CS2 are asserted)
+	BCM2835_SPI_CS_NONE = 3, ///< No CS, control it yourself
 } bcm2835SPIChipSelect;
 
 /// \brief bcm2835SPIClockDivider
 /// Specifies the divider used to generate the SPI clock from the system clock.
 /// Figures below give the divider, clock period and clock frequency.
-typedef enum
-{
-    BCM2835_SPI_CLOCK_DIVIDER_65536 = 0,       ///< 65536 = 256us = 4kHz
-    BCM2835_SPI_CLOCK_DIVIDER_32768 = 32768,   ///< 32768 = 126us = 8kHz
-    BCM2835_SPI_CLOCK_DIVIDER_16384 = 16384,   ///< 16384 = 64us = 15.625kHz
-    BCM2835_SPI_CLOCK_DIVIDER_8192  = 8192,    ///< 8192 = 32us = 31.25kHz
-    BCM2835_SPI_CLOCK_DIVIDER_4096  = 4096,    ///< 4096 = 16us = 62.5kHz
-    BCM2835_SPI_CLOCK_DIVIDER_2048  = 2048,    ///< 2048 = 8us = 125kHz
-    BCM2835_SPI_CLOCK_DIVIDER_1024  = 1024,    ///< 1024 = 4us = 250kHz
-    BCM2835_SPI_CLOCK_DIVIDER_512   = 512,     ///< 512 = 2us = 500kHz
-    BCM2835_SPI_CLOCK_DIVIDER_256   = 256,     ///< 256 = 1us = 1MHz
-    BCM2835_SPI_CLOCK_DIVIDER_128   = 128,     ///< 128 = 500ns = = 2MHz
-    BCM2835_SPI_CLOCK_DIVIDER_64    = 64,      ///< 64 = 250ns = 4MHz
-    BCM2835_SPI_CLOCK_DIVIDER_32    = 32,      ///< 32 = 125ns = 8MHz
-    BCM2835_SPI_CLOCK_DIVIDER_16    = 16,      ///< 16 = 50ns = 20MHz
-    BCM2835_SPI_CLOCK_DIVIDER_8     = 8,       ///< 8 = 25ns = 40MHz
-    BCM2835_SPI_CLOCK_DIVIDER_4     = 4,       ///< 4 = 12.5ns 80MHz
-    BCM2835_SPI_CLOCK_DIVIDER_2     = 2,       ///< 2 = 6.25ns = 160MHz
-    BCM2835_SPI_CLOCK_DIVIDER_1     = 1,       ///< 0 = 256us = 4kHz
+typedef enum {
+	BCM2835_SPI_CLOCK_DIVIDER_65536 = 0,       ///< 65536 = 256us = 4kHz
+	BCM2835_SPI_CLOCK_DIVIDER_32768 = 32768,   ///< 32768 = 126us = 8kHz
+	BCM2835_SPI_CLOCK_DIVIDER_16384 = 16384,   ///< 16384 = 64us = 15.625kHz
+	BCM2835_SPI_CLOCK_DIVIDER_8192  = 8192,    ///< 8192 = 32us = 31.25kHz
+	BCM2835_SPI_CLOCK_DIVIDER_4096  = 4096,    ///< 4096 = 16us = 62.5kHz
+	BCM2835_SPI_CLOCK_DIVIDER_2048  = 2048,    ///< 2048 = 8us = 125kHz
+	BCM2835_SPI_CLOCK_DIVIDER_1024  = 1024,    ///< 1024 = 4us = 250kHz
+	BCM2835_SPI_CLOCK_DIVIDER_512   = 512,     ///< 512 = 2us = 500kHz
+	BCM2835_SPI_CLOCK_DIVIDER_256   = 256,     ///< 256 = 1us = 1MHz
+	BCM2835_SPI_CLOCK_DIVIDER_128   = 128,     ///< 128 = 500ns = = 2MHz
+	BCM2835_SPI_CLOCK_DIVIDER_64    = 64,      ///< 64 = 250ns = 4MHz
+	BCM2835_SPI_CLOCK_DIVIDER_32    = 32,      ///< 32 = 125ns = 8MHz
+	BCM2835_SPI_CLOCK_DIVIDER_16    = 16,      ///< 16 = 50ns = 20MHz
+	BCM2835_SPI_CLOCK_DIVIDER_8     = 8,       ///< 8 = 25ns = 40MHz
+	BCM2835_SPI_CLOCK_DIVIDER_4     = 4,       ///< 4 = 12.5ns 80MHz
+	BCM2835_SPI_CLOCK_DIVIDER_2     = 2,       ///< 2 = 6.25ns = 160MHz
+	BCM2835_SPI_CLOCK_DIVIDER_1     = 1,       ///< 0 = 256us = 4kHz
 } bcm2835SPIClockDivider;
 
 
@@ -482,7 +475,7 @@ extern "C" {
     /// \param[in] paddr Physical address to read from. See BCM2835_GPIO_BASE etc.
     /// \return the value read from the 32 bit register
     /// \sa Physical Addresses
-    extern uint32_t bcm2835_peri_read(volatile uint32_t* paddr);
+    extern uint32_t bcm2835_peri_read(volatile uint32_t *paddr);
 
 
     /// Reads 32 bit value from a peripheral address without the read barrier
@@ -491,7 +484,7 @@ extern "C" {
     /// \param[in] paddr Physical address to read from. See BCM2835_GPIO_BASE etc.
     /// \return the value read from the 32 bit register
     /// \sa Physical Addresses
-    extern uint32_t bcm2835_peri_read_nb(volatile uint32_t* paddr);
+    extern uint32_t bcm2835_peri_read_nb(volatile uint32_t *paddr);
 
 
     /// Writes 32 bit value from a peripheral address
@@ -500,7 +493,7 @@ extern "C" {
     /// \param[in] paddr Physical address to read from. See BCM2835_GPIO_BASE etc.
     /// \param[in] value The 32 bit value to write
     /// \sa Physical Addresses
-    extern void bcm2835_peri_write(volatile uint32_t* paddr, uint32_t value);
+    extern void bcm2835_peri_write(volatile uint32_t *paddr, uint32_t value);
 
     /// Writes 32 bit value from a peripheral address without the write barrier
     /// You should only use this when your code has previously called bcm2835_peri_write()
@@ -508,7 +501,7 @@ extern "C" {
     /// \param[in] paddr Physical address to read from. See BCM2835_GPIO_BASE etc.
     /// \param[in] value The 32 bit value to write
     /// \sa Physical Addresses
-    extern void bcm2835_peri_write_nb(volatile uint32_t* paddr, uint32_t value);
+    extern void bcm2835_peri_write_nb(volatile uint32_t *paddr, uint32_t value);
 
     /// Alters a number of bits in a 32 peripheral regsiter.
     /// It reads the current valu and then alters the bits deines as 1 in mask, 
@@ -521,7 +514,7 @@ extern "C" {
     /// \param[in] value The 32 bit value to write, masked in by mask.
     /// \param[in] mask Bitmask that defines the bits that will be altered in the register.
     /// \sa Physical Addresses
-    extern void bcm2835_peri_set_bits(volatile uint32_t* paddr, uint32_t value, uint32_t mask);
+    extern void bcm2835_peri_set_bits(volatile uint32_t *paddr, uint32_t value, uint32_t mask);
     /// @} // end of lowlevel
 
     /// \defgroup gpio GPIO register access
@@ -765,7 +758,7 @@ extern "C" {
     /// \param[out] rbuf Received bytes will by put in this buffer
     /// \param[in] len Number of bytes in the tbuf buffer, and the number of bytes to send/received
     /// \sa bcm2835_spi_transfer()
-    extern void bcm2835_spi_transfernb(char* tbuf, char* rbuf, uint32_t len);
+    extern void bcm2835_spi_transfernb(char *tbuf, char *rbuf, uint32_t len);
 
     /// Transfers any number of bytes to and from the currently selected SPI slave
     /// using bcm2835_spi_transfernb.
@@ -773,7 +766,7 @@ extern "C" {
     /// \param[in,out] buf Buffer of bytes to send. Received bytes will replace the contents
     /// \param[in] len Number of bytes int eh buffer, and the number of bytes to send/received
     /// \sa bcm2835_spi_transfer()
-    extern void bcm2835_spi_transfern(char* buf, uint32_t len);
+    extern void bcm2835_spi_transfern(char *buf, uint32_t len);
 
 
     /// @} 
