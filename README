@@ -1,0 +1,6 @@
+rpi_mzt280
+==========
+
+Display driver system for the Tontec 2.8" LCD on Raspberry Pi.
+
+Code based entirely upon the provided display software.
