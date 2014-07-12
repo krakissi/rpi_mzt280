@@ -302,12 +302,12 @@ void bcm2835_delayMicroseconds(unsigned int micros){
 		t1.tv_sec = 0;
 		t1.tv_nsec = 1000L * (micros - 200);
 		nanosleep(&t1, NULL);
-	}	
+	}
 
 	while (1){
 		clock_gettime(CLOCK_MONOTONIC_RAW, &t1);
 		t_us = (t1.tv_sec - t0.tv_sec) * 1e6 + (t1.tv_nsec - t0.tv_nsec) * 1e-3;
-		if(t_us >= micros) 
+		if(t_us >= micros)
 			break;
 	}
 }
@@ -356,11 +356,11 @@ void bcm2835_spi_begin(void){
 	//bcm2835_gpio_fsel(RPI_GPIO_P1_21, BCM2835_GPIO_FSEL_ALT0); // MISO
 	bcm2835_gpio_fsel(RPI_GPIO_P1_19, BCM2835_GPIO_FSEL_ALT0); // MOSI
 	bcm2835_gpio_fsel(RPI_GPIO_P1_23, BCM2835_GPIO_FSEL_ALT0); // CLK
-	
+
 	// Set the SPI CS register to the some sensible defaults
 	volatile uint32_t* paddr = spi0 + BCM2835_SPI0_CS / 4;
 	bcm2835_peri_write(paddr, 0); // All 0s
-	
+
 	// Clear TX and RX fifos
 	bcm2835_peri_write_nb(paddr, BCM2835_SPI0_CS_CLEAR);
 }
@@ -400,7 +400,7 @@ uint8_t bcm2835_spi_transfer(uint8_t value){
 
 	// This is Polled transfer as per section 10.6.1
 	// BUG ALERT: what happens if we get interupted in this section, and someone else
-	// accesses a different peripheral? 
+	// accesses a different peripheral?
 	// Clear TX and RX fifos
 	bcm2835_peri_set_bits(paddr, BCM2835_SPI0_CS_CLEAR, BCM2835_SPI0_CS_CLEAR);
 
@@ -434,7 +434,7 @@ void bcm2835_spi_transfernb(char *tbuf, char *rbuf, uint32_t len){
 
 	// This is Polled transfer as per section 10.6.1
 	// BUG ALERT: what happens if we get interupted in this section, and someone else
-	// accesses a different peripheral? 
+	// accesses a different peripheral?
 
 	// Clear TX and RX fifos
 	bcm2835_peri_set_bits(paddr, BCM2835_SPI0_CS_CLEAR, BCM2835_SPI0_CS_CLEAR);
@@ -471,16 +471,16 @@ void bcm2835_spi_transfernb(char *tbuf, char *rbuf, uint32_t len){
 void bcm2835_spi_drawint(int *tbuf, uint32_t len){
 	volatile uint32_t *paddr = spi0 + BCM2835_SPI0_CS / 4;
 	volatile uint32_t *fifo = spi0 + BCM2835_SPI0_FIFO / 4;
-	
+
 	// This is Polled transfer as per section 10.6.1
 	// BUG ALERT: what happens if we get interupted in this section, and someone else
 	// accesses a different peripheral?
 	// Clear TX and RX fifos
 	bcm2835_peri_set_bits(paddr, BCM2835_SPI0_CS_CLEAR, BCM2835_SPI0_CS_CLEAR);
-	
+
 	// Set TA = 1
 	bcm2835_peri_set_bits(paddr, BCM2835_SPI0_CS_TA, BCM2835_SPI0_CS_TA);
-	
+
 	uint32_t i;
 	for(i = 0; i < len; i++){
 		//bcm2835_peri_write_nb(fifo, tbuf[i] >> 8);
@@ -495,7 +495,7 @@ void bcm2835_spi_drawint(int *tbuf, uint32_t len){
 	// Wait for DONE to be set
 	while(!(bcm2835_peri_read_nb(paddr) & BCM2835_SPI0_CS_DONE))
 		delayMicroseconds(10);
-	
+
 	// Set TA = 0, and also set the barrier
 	bcm2835_peri_set_bits(paddr, 0, BCM2835_SPI0_CS_TA);
 }
@@ -562,7 +562,7 @@ int bcm2835_init(void){
 		fprintf(stderr, "bcm2835_init: Unable to open /dev/mem: %s\n", strerror(errno));
 		goto exit;
 	}
-	
+
 	// GPIO:
 	gpio = mapmem("gpio", BCM2835_BLOCK_SIZE, memfd, BCM2835_GPIO_BASE);
 	if(gpio == MAP_FAILED)
@@ -577,11 +577,11 @@ int bcm2835_init(void){
 	clk = mapmem("clk", BCM2835_BLOCK_SIZE, memfd, BCM2835_CLOCK_BASE);
 	if(clk == MAP_FAILED)
 		goto exit;
-	
+
 	pads = mapmem("pads", BCM2835_BLOCK_SIZE, memfd, BCM2835_GPIO_PADS);
 	if(pads == MAP_FAILED)
 		goto exit;
-	
+
 	spi0 = mapmem("spi0", BCM2835_BLOCK_SIZE, memfd, BCM2835_SPI0_BASE);
 	if(spi0 == MAP_FAILED)
 		goto exit;
@@ -612,4 +612,4 @@ int bcm2835_close(void){
 	}
 
 	return ok;
-}	
+}
