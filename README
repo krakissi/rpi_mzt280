@@ -8,7 +8,7 @@ Code based entirely upon the provided display software.
 Setup instructions:
 	Clone this repository if you haven't already downloaded it:
 
-		git clone http://github.com/krakissi/rpi_mzt280.git
+		git clone https://github.com/krakissi/rpi_mzt280.git
 
 	Build the tool:
 
