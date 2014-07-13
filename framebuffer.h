@@ -14,14 +14,14 @@ framebuffer *framebuffer_create(int mode, const char *infilestr){
 	FILE *infile = fopen(infilestr, "rb");
 	int i, j;
 
-	fb->w = 2 * (MAX_X + 1);
-	fb->h = 2 * (MAX_Y + 1);
+	fb->w = 2 * DISP_W;
+	fb->h = 2 * DISP_H;
 	fb->mode = mode;
 	switch(mode){
 		// 320x240 native mode
 		case 2:
-			fb->w = MAX_X + 1;
-			fb->h = MAX_Y + 1;
+			fb->w = DISP_W;
+			fb->h = DISP_H;
 			break;
 
 		// 640x480 single-sample mode (very lossy)

@@ -24,6 +24,8 @@
 
 #define MAX_X 319
 #define MAX_Y 239
+#define DISP_W (MAX_X + 1)
+#define DISP_H (MAX_Y + 1)
 
 #define	SPICS  RPI_GPIO_P1_24 //GPIO08
 #define	SPIRS  RPI_GPIO_P1_22 //GPIO25
@@ -64,7 +66,7 @@ int downscale(framebuffer *fb, int x, int y){
 	int p, r = 0, g = 0, b = 0;
 	unsigned long offset = 0;
 
-	offset = (y * 640 + x) * 2;
+	offset = (y * 2 * DISP_W + x) * 2;
 	p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
 	setsample(&r, &g, &b, p);
 
@@ -76,15 +78,15 @@ int downscale(framebuffer *fb, int x, int y){
 	} else {
 		// Blended sample mode.
 		// FIXME there has to be a more efficient way to get the offset
-		offset = ((y + 1) * 640 + (x + 1)) * 2;
+		offset = ((y + 1) * 2 * DISP_W + (x + 1)) * 2;
 		p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
 		setsample(&r, &g, &b, p);
 
-		offset = ((y + 1) * 640 + x) * 2;
+		offset = ((y + 1) * 2 * DISP_W + x) * 2;
 		p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
 		setsample(&r, &g, &b, p);
 
-		offset = (y * 640 + (x + 1)) * 2;
+		offset = (y * 2 * DISP_W + (x + 1)) * 2;
 		p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
 		setsample(&r, &g, &b, p);
 	}
@@ -113,7 +115,7 @@ void loadFrameBuffer_diff(framebuffer *fb){
 			for(j = 0; j <= MAX_X; j++){
 				switch(fb->mode){
 					case 2:
-						offset = (i * (MAX_X + 1) + j) * 2;
+						offset = (i * DISP_W + j) * 2;
 						p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
 						break;
 
