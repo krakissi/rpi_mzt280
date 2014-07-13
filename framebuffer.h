@@ -3,8 +3,8 @@ typedef struct framebuffer {
 	int w, h;
 	FILE *infile;
 	long fp;
-	int drawmap[2][MAX_Y + 1][MAX_X + 1];
-	int diffmap[MAX_Y + 1][MAX_X + 1];
+	int drawmap[2][DISP_H][DISP_W];
+	int diffmap[DISP_H][DISP_W];
 	int flag;
 	int mode;
 } framebuffer;

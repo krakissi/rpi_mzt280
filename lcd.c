@@ -36,14 +36,8 @@ void inline LCD_WR_Data(int val){
 }
 
 void write_dot(char dx, int dy, int color){
-	//LCD_WR_CMD(XS,0x0000); // Column address start2
-	//LCD_WR_CMD(XE,MAX_X); // Column address end2
-	//LCD_WR_CMD(YS,0x0000); // Row address start2
-	//LCD_WR_CMD(YE,MAX_Y); // Row address end2
-
-	LCD_WR_CMD(XP, dy); // Column address start
-	LCD_WR_CMD(YP, dx); // Row address start
-
+	LCD_WR_CMD(XP, dy);
+	LCD_WR_CMD(YP, dx);
 	LCD_WR_CMD(0x22, color);
 }
 

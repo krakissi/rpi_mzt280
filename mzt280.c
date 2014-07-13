@@ -13,9 +13,10 @@ char state = 0;
 #include "framebuffer.h"
 
 void setsample(int *r, int *g, int *b, framebuffer *fb, unsigned long offset){
-	int p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
+	unsigned char *buf = &fb->buffer[offset];
+	int p = (buf[1] << 8) | buf[0];
 
-	*r += (p & RGB565_MASK_RED) >> 11 << 1;
+	*r += (p & RGB565_MASK_RED) >> 10;
 	*g += (p & RGB565_MASK_GREEN) >> 5;
 	*b += (p & RGB565_MASK_BLUE) << 1;
 }
@@ -48,19 +49,21 @@ int downscale(framebuffer *fb, int x, int y){
 }
 
 void loadFrameBuffer_diff(framebuffer *fb){
-	int i, j, p;
 	int diffsx, diffsy, diffex, diffey;
 	unsigned long offset = 0;
-	int numdiff = 0;
+	long diff_count;
+	int i, j, p;
 
 	framebuffer_read(fb);
 
 	while(!state){
-		// Delay to reduce CPU saturation.
-		usleep(17000);
+		// Delay to save CPU
+		usleep(17000L);
 
-		numdiff = 0;
+		// Switch buffer planes
 		fb->flag = 1 - fb->flag;
+
+		diff_count = 0L;
 		diffex = diffey = 0;
 		diffsx = diffsy = 65535;
 
@@ -81,7 +84,8 @@ void loadFrameBuffer_diff(framebuffer *fb){
 					fb->drawmap[fb->flag][i][j] = p;
 					fb->diffmap[i][j] = 1;
 					fb->drawmap[1 - fb->flag][i][j] = p;
-					numdiff++;
+					diff_count++;
+
 					if(i < diffsx)
 						diffsx = i;
 					if(i > diffex)
@@ -90,28 +94,34 @@ void loadFrameBuffer_diff(framebuffer *fb){
 						diffsy = j;
 					if(j > diffey)
 						diffey = j;
-
 				} else fb->diffmap[i][j] = 0;
 			}
 		}
 
-		LCD_WR_CMD(YS, diffsx); // Column address start2
-		LCD_WR_CMD(YE, diffex); // Column address end2
-		LCD_WR_CMD(XS, diffsy); // Row address start2
-		LCD_WR_CMD(XE, diffey); // Row address end2
+		if(diff_count < (DISP_W * DISP_H / 4)){
+			// For small updates, writing individual dots looks better.
+			for(i = 0; i <= MAX_Y; i++)
+				for(j = 0; j <= MAX_X; j++)
+					if(fb->diffmap[i][j])
+						write_dot(i, j, fb->drawmap[fb->flag][i][j]);
+		} else {
+			// Large area writes are faster than single dots. Needed for big delta.
+			LCD_WR_CMD(YS, diffsx); // Column address start
+			LCD_WR_CMD(YE, diffex); // Column address end
+			LCD_WR_CMD(XS, diffsy); // Row address start
+			LCD_WR_CMD(XE, diffey); // Row address end
 
-		LCD_WR_CMD(XP, diffsy); // Column address start
-		LCD_WR_CMD(YP, diffsx); // Row address start
+			LCD_WR_CMD(XP, diffsy); // Column address start
+			LCD_WR_CMD(YP, diffsx); // Row address start
 
-		LCD_WR_REG(0x22);
-		LCD_CS_CLR;
-		LCD_RS_SET;
+			LCD_WR_REG(0x22);
+			LCD_CS_CLR;
+			LCD_RS_SET;
 
-		for(i = diffsx; i <= diffex; i++){
-			for(j = diffsy; j <= diffey; j++)
-				LCD_WR_Data(fb->drawmap[fb->flag][i][j]);
+			for(i = diffsx; i <= diffex; i++)
+				for(j = diffsy; j <= diffey; j++)
+					LCD_WR_Data(fb->drawmap[fb->flag][i][j]);
 		}
-
 		framebuffer_read(fb);
 	}
 }
