@@ -22,8 +22,12 @@ update: all
 	@sudo mzt280 &
 
 # Display program
-mzt280: mzt280.c bcm2835.o lcd.h framebuffer.h
-	$(CC) -o mzt280 -l rt mzt280.c bcm2835.o
+mzt280: mzt280.c bcm2835.o lcd.o framebuffer.h
+	$(CC) -o mzt280 -l rt mzt280.c bcm2835.o lcd.o
+
+# LCD functions
+lcd.o: lcd.h lcd.c
+	$(CC) -c lcd.c -o lcd.o
 
 # Broadcom interface object
 bcm2835.o: bcm2835.c bcm2835.h
