@@ -454,6 +454,7 @@ void LCD_Init(){
 	LCD_WR_CMD(0x0007, 0x0173);		// 262K color and display ON
 }
 
+// FIXME unused, maybe for portrait mode.
 void LCD_QQ1(){
 	int num;
 	short *p;
@@ -487,7 +488,6 @@ void LCD_QQ1(){
 	LCD_CS_SET;
 }
 
-// FIXME: repeat function? LCD_QQ1()
 void LCD_QQ(){
 	int num;
 	short *p;
@@ -562,17 +562,48 @@ void LCD_test(){
 	LCD_CS_SET;
 }
 
-int main (void){
-	printf("bcm2835 init now\n");
+int main(int argc, char **argv){
+	int c, state = 0;
+	int displayMode = 0;
+	int quietMode = 0;
+	int runTest = 0;
+
+	while(!state && (c = getopt(argc, argv, "2t"))) switch(c){
+		case '2':
+			displayMode = 1;
+			break;
+		case 't':
+			runTest = 1;
+			break;
+
+		case -1:
+			state = 1;
+			break;
+		default:
+			state = 2;
+	}
+	if(state == 2){
+		// FIXME useful message
+		fprintf(stderr,
+			"Usage:\t%s [flags]\n"
+			"\t2 - 320x240 mode (default 640x480)\n"
+			"\tt - Run display test at startup\n"
+			"\n",
+			*argv
+		);
+
+		return 0;
+	}
+
 	if(!bcm2835_init()){
 		printf("bcm2835 init error\n");
 		return 1;
 	}
 
-	bcm2835_gpio_fsel(SPICS, BCM2835_GPIO_FSEL_OUTP) ;
-	bcm2835_gpio_fsel(SPIRS, BCM2835_GPIO_FSEL_OUTP) ;
-	bcm2835_gpio_fsel(SPIRST, BCM2835_GPIO_FSEL_OUTP) ;
-	bcm2835_gpio_fsel(LCDPWM, BCM2835_GPIO_FSEL_OUTP) ;
+	bcm2835_gpio_fsel(SPICS, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(SPIRS, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(SPIRST, BCM2835_GPIO_FSEL_OUTP);
+	bcm2835_gpio_fsel(LCDPWM, BCM2835_GPIO_FSEL_OUTP);
 
 	bcm2835_spi_begin();
 	bcm2835_spi_setBitOrder(BCM2835_SPI_BIT_ORDER_MSBFIRST);
@@ -583,18 +614,16 @@ int main (void){
 	//bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS1,LOW);
 
 	LCD_PWM_CLR;
-	printf("Raspberry Pi MZT280 LCD Testing...\n");
-	printf("http://jwlcd-tp.taobao.com\n");
-
 	LCD_Init();
 
-	// FIXME: display test could be removed.
-	LCD_test();
+	if(runTest){
+		LCD_test();
+		LCD_QQ();
+	}
 
-	LCD_QQ();
+	if(displayMode)
+		loadFrameBuffer_diff_320();
+	else loadFrameBuffer_diff();
 
-	// FIXME: 320 variant for native res operation?
-	loadFrameBuffer_diff_320();
-	//loadFrameBuffer_diff();
 	return 0;
 }
