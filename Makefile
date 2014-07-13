@@ -2,9 +2,11 @@ all: mzt280
 
 # Kill running software, patch, and restart
 update: all
-	sudo killall mzt280
-	sudo cp mzt280 /usr/bin/
-	sudo mzt280 &
+	@sudo killall mzt280 || echo "No process, no problem."
+	@echo "Copying to /usr/bin/"
+	@sudo cp mzt280 /usr/bin/
+	@echo "Starting display process"
+	@sudo mzt280 &
 
 # Display program
 mzt280: mzt280.c bcm2835.o

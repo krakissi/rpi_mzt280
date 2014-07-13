@@ -5,7 +5,7 @@
 #include <string.h>
 #include <sys/timeb.h>
 
-#define RGB565(r,g,b)((r >> 3) << 11 | (g >> 2) << 5 | ( b >> 3))
+#define RGB565(r, g, b) ((r >> 3) << 11 | (g >> 2) << 5 | ( b >> 3))
 #define BCM2708SPI
 #define ROTATE90
 
@@ -13,7 +13,7 @@
 #define RGB565_MASK_GREEN 0x07E0
 #define RGB565_MASK_BLUE  0x001F
 
-#ifdef	ROTATE90
+#ifdef ROTATE90
 	#define XP 0x021
 	#define YP 0x020
 
@@ -74,10 +74,6 @@ void LCD_WR_REG(int index){
 	LCD_CS_SET;
 }
 
-int compare(const void *a, const void *b){
-	return *(int *)a - *(int *)b;
-}
-
 void LCD_WR_CMD(int index,int val){
 	LCD_CS_CLR;
 	LCD_RS_CLR;
@@ -112,14 +108,13 @@ void write_dot(char dx, int dy, int color){
 	LCD_WR_CMD(0x22,color);
 }
 
-
 void loadFrameBuffer_diff(){
 	int xsize = 640, ysize = 480;
 	unsigned char *buffer;
 	FILE *infile = fopen("/dev/fb0", "rb");
 	long fp;
 	int i, j, k;
-	unsigned long offset=0, t=500;
+	unsigned long offset = 0, t = 500;
 	int p;
 	int r1, g1, b1;
 	int r, g, b;
@@ -201,7 +196,7 @@ void loadFrameBuffer_diff(){
 				g += g1;
 				b += b1 << 1;
 
-				offset = ((i + 1)* xsize + j + 1) * 2;
+				offset = ((i + 1) * xsize + j + 1) * 2;
 				p = (buffer[offset + 1] << 8) | buffer[offset];
 				r1 = (p & RGB565_MASK_RED) >> 11;
 				g1 = (p & RGB565_MASK_GREEN) >> 5;
@@ -223,9 +218,9 @@ void loadFrameBuffer_diff(){
 						diffsx = i >> 1;
 					if((i >> 1) > diffex)
 						diffex = i >> 1;
-					if((j >> 1)< diffsy)
+					if((j >> 1) < diffsy)
 						diffsy = j >> 1;
-					if((j >> 1)>diffey)
+					if((j >> 1) > diffey)
 						diffey = j >> 1;
 
 				} else diffmap[i >> 1][j >> 1] = 0;
@@ -348,9 +343,9 @@ void loadFrameBuffer_diff_320(){
 						diffsx = i;
 					if((i) > diffex)
 						diffex = i;
-					if((j)< diffsy)
-						diffsy=j;
-					if((j)>diffey)
+					if((j) < diffsy)
+						diffsy = j;
+					if((j) > diffey)
 						diffey = j;
 
 				} else diffmap[i][j]=0;
@@ -419,7 +414,7 @@ void LCD_Init(){
 	LCD_WR_CMD(0x0013, 0x3038);		 // VDV[4:0] for VCOM amplitude
 	delay(7);
 
-	//----------2.8" Gamma  Curve table 2 ----------
+	//----------2.8" Gamma Curve table 2 ----------
 	LCD_WR_CMD(0x30, 0x0000);
 	LCD_WR_CMD(0x31, 0x0402);
 	LCD_WR_CMD(0x32, 0x0307);
