@@ -1,4 +1,4 @@
-CC=gcc -s
+CC=gcc -s -Wunused
 
 all: mzt280
 
@@ -22,7 +22,7 @@ update: all
 	@sudo mzt280 &
 
 # Display program
-mzt280: mzt280.c bcm2835.o
+mzt280: mzt280.c bcm2835.o lcd.h framebuffer.h
 	$(CC) -o mzt280 -l rt mzt280.c bcm2835.o
 
 # Broadcom interface object

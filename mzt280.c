@@ -6,6 +6,7 @@
 #include <signal.h>
 #include <sys/timeb.h>
 
+
 #define RGB565(r, g, b) ((r >> 3) << 11 | (g >> 2) << 5 | ( b >> 3))
 #define BCM2708SPI
 #define ROTATE90
@@ -61,339 +62,122 @@
 
 short color[] = { 0xf800, 0x07e0, 0x001f, 0xffe0, 0x0000, 0xffff, 0x07ff, 0xf81f };
 
-/* Image part */
-char *value = NULL;
-int hsize = 0, vsize = 0;
-
 /* Global State for Graceful Exits */
 char state = 0;
 
-void LCD_WR_REG(int index){
-	LCD_CS_CLR;
-	LCD_RS_CLR;
+#include "lcd.h"
+#include "framebuffer.h"
 
-	bcm2835_spi_transfer(index >> 8);
-	bcm2835_spi_transfer(index);
-
-	LCD_CS_SET;
-}
-
-void LCD_WR_CMD(int index, int val){
-	LCD_CS_CLR;
-	LCD_RS_CLR;
-
-	bcm2835_spi_transfer(index >> 8);
-	bcm2835_spi_transfer(index);
-
-	LCD_RS_SET;
-
-	bcm2835_spi_transfer(val >> 8);
-	bcm2835_spi_transfer(val);
-
-	LCD_CS_SET;
-}
-
-void inline LCD_WR_Data(int val){
-	//LCD_CS_CLR;
-	//LCD_RS_SET;
-	bcm2835_spi_transfer(val>>8);
-	bcm2835_spi_transfer(val);
-}
-
-void write_dot(char dx, int dy, int color){
-	//LCD_WR_CMD(XS,0x0000); // Column address start2
-	//LCD_WR_CMD(XE,MAX_X); // Column address end2
-	//LCD_WR_CMD(YS,0x0000); // Row address start2
-	//LCD_WR_CMD(YE,MAX_Y); // Row address end2
-
-	LCD_WR_CMD(XP,dy); // Column address start
-	LCD_WR_CMD(YP,dx); // Row address start
-
-	LCD_WR_CMD(0x22,color);
-}
-
-void loadFrameBuffer_diff(){
-	int xsize = 640, ysize = 480;
-	unsigned char *buffer;
-	FILE *infile = fopen("/dev/fb0", "rb");
-	long fp;
-	int i, j, k;
-	unsigned long offset = 0, t = 500;
-	int p;
-	int r1, g1, b1;
-	int r, g, b;
-	long minsum = 0;
-	long nowsum = 0;
-	int flag;
-	int ra, ga, ba;
-	int drawmap[2][ysize / 2][xsize / 2];
-	int diffmap[ysize / 2][xsize / 2];
-	int diffsx, diffsy, diffex, diffey;
-	int numdiff = 0;
-	int area;
-
-	buffer = (unsigned char *) malloc(xsize * ysize * 2);
-	fseek(infile, 0, 0);
-
-	if(fread(buffer, xsize * ysize *2, sizeof(unsigned char), infile) != 1){
-		printf ("Read < %d chars when loading file %s\n", hsize * vsize * 3, "ss");
-		printf ("config.txt framebuffer setting error") ;
-		return;
-	}
-	LCD_WR_CMD(XS, 0x0000); // Column address start2
-	LCD_WR_CMD(XE, MAX_X); // Column address end2
-	LCD_WR_CMD(YS, 0x0000); // Row address start2
-	LCD_WR_CMD(YE, MAX_Y); // Row address end2
-
-	LCD_WR_REG(0x22);
-	LCD_CS_CLR;
-	LCD_RS_SET;
-
-	for(i = 0; i < (ysize / 2); i++) {
-		for(j = 0; j < (xsize / 2); j++) {
-			diffmap[i][j] = 1;
-			drawmap[0][i][j] = 0;
-			LCD_WR_Data(0);
-			drawmap[1][i][j] = 255;
-		}
-	}
-
-	flag = 1;
-
-	while(!state){
-		// FIXME adding usleep to reduce CPU usage.
-		usleep(17000);
-
-		numdiff = 0;
-		flag = 1 - flag;
-		diffex = diffey = 0;
-		diffsx = diffsy = 65535;
-
-		for(i = 0; i < ysize; i += 2){
-			for(j = 0; j < xsize; j += 2){
-				offset = (i * xsize + j) * 2;
-				p = (buffer[offset + 1] << 8) | buffer[offset];
-				r = (p & RGB565_MASK_RED) >> 11;
-				g = (p & RGB565_MASK_GREEN) >> 5;
-				b = (p & RGB565_MASK_BLUE);
-
-				r <<= 1;
-				b <<= 1;
-
-				offset = ((i + 1) * xsize + j)*2;
-				p = (buffer[offset + 1] << 8) | buffer[offset];
-				r1 = (p & RGB565_MASK_RED) >> 11;
-				g1 = (p & RGB565_MASK_GREEN) >> 5;
-				b1 = (p & RGB565_MASK_BLUE);
-
-				r += r1 << 1;
-				g += g1;
-				b += b1 << 1;
-
-				offset = (i * xsize + j + 1) * 2;
-				p= (buffer[offset + 1] << 8) | buffer[offset];
-				r1 = (p & RGB565_MASK_RED) >> 11;
-				g1 = (p & RGB565_MASK_GREEN) >> 5;
-				b1 = (p & RGB565_MASK_BLUE);
-
-				r += r1 << 1;
-				g += g1;
-				b += b1 << 1;
-
-				offset = ((i + 1) * xsize + j + 1) * 2;
-				p = (buffer[offset + 1] << 8) | buffer[offset];
-				r1 = (p & RGB565_MASK_RED) >> 11;
-				g1 = (p & RGB565_MASK_GREEN) >> 5;
-				b1 = (p & RGB565_MASK_BLUE);
-
-				r += r1 << 1;
-				g += g1;
-				b += b1 << 1;
-
-				p = RGB565(r, g, b);
-
-				//drawmap[flag][i>>1][j>>1] = p;
-				if(drawmap[1 - flag][i >> 1][j >> 1] != p) {
-					drawmap[flag][i >> 1][j >> 1] = p;
-					diffmap[i >> 1][j >> 1] = 1;
-					drawmap[1 - flag][i >> 1][j >> 1] = p;
-					numdiff++;
-					if((i >> 1) < diffsx)
-						diffsx = i >> 1;
-					if((i >> 1) > diffex)
-						diffex = i >> 1;
-					if((j >> 1) < diffsy)
-						diffsy = j >> 1;
-					if((j >> 1) > diffey)
-						diffey = j >> 1;
-
-				} else diffmap[i >> 1][j >> 1] = 0;
-			}
-		}
-
-		if(numdiff > 10){
-			// printf ("(%d, %d) - (%d, %d)\n",diffsx, diffsy, diffex, diffey);
-
-			//area = ((abs(diffex - diffsx)+1)*(1+abs(diffey-diffsy)));
-			//printf("diff:%d, area:%d, cov:%f\n",numdiff, area,(1.0*numdiff)/area);
-		}
-
-		//if (numdiff< 100)
-		if(0){
-			LCD_WR_CMD(XS, 0x0000); // Column address start2
-			LCD_WR_CMD(XE, MAX_X); // Column address end2
-			LCD_WR_CMD(YS, 0x0000); // Row address start2
-			LCD_WR_CMD(YE, MAX_Y); // Row address end2
-			for(i = diffsx; i <= diffex; i++){
-				for(j = diffsy; j <= diffey; j++) {
-					if(diffmap[i][j] != 0)
-						write_dot(i, j, drawmap[flag][i][j]);
-				}
-			}
-			usleep(10L);
-		} else {
-			LCD_WR_CMD(YS, diffsx); // Column address start2
-			LCD_WR_CMD(YE, diffex); // Column address end2
-			LCD_WR_CMD(XS, diffsy); // Row address start2
-			LCD_WR_CMD(XE, diffey); // Row address end2
-
-			LCD_WR_CMD(XP, diffsy); // Column address start
-			LCD_WR_CMD(YP, diffsx); // Row address start
-
-			LCD_WR_REG(0x22);
-			LCD_CS_CLR;
-			LCD_RS_SET;
-			//printf ("(%d, %d) - (%d, %d)\n",diffsx, diffsy, diffex, diffey);
-			for(i = diffsx; i <= diffex; i++){
-				for(j = diffsy; j <= diffey; j++)
-					LCD_WR_Data(drawmap[flag][i][j]);
-			}
-		}
-
-		fseek(infile, 0, 0);
-		if(fread(buffer, xsize * ysize *2, sizeof(unsigned char), infile) != 1)
-			printf("Read < %d chars when loading file %s\n", hsize * vsize * 3, "ss");
-	}
-}
-
-
-void loadFrameBuffer_diff_320(){
-	int xsize = 320, ysize = 240;
-	unsigned char *buffer;
-	FILE *infile = fopen("/dev/fb0", "rb");
-	long fp;
-	int i, j, k;
+int downscale(framebuffer *fb, int x, int y){
+	int p, r, g, b, r1, g1, b1;
 	unsigned long offset = 0;
-	int p;
-	int r1, g1, b1;
-	int r, g, b;
-	long minsum = 0;
-	long nowsum = 0;
-	int flag;
-	int ra, ga, ba;
-	int drawmap[2][ysize][xsize];
-	int diffmap[ysize][xsize];
+
+	r = (p & RGB565_MASK_RED) >> 11;
+	g = (p & RGB565_MASK_GREEN) >> 5;
+	b = (p & RGB565_MASK_BLUE);
+
+	r <<= 1;
+	b <<= 1;
+
+	offset = ((y + 1) * 320 * fb->scale + x) * 2;
+	p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
+	r1 = (p & RGB565_MASK_RED) >> 11;
+	g1 = (p & RGB565_MASK_GREEN) >> 5;
+	b1 = (p & RGB565_MASK_BLUE);
+
+	r += r1 << 1;
+	g += g1;
+	b += b1 << 1;
+
+	offset = (y * 320 * fb->scale + x + 1) * 2;
+	p= (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
+	r1 = (p & RGB565_MASK_RED) >> 11;
+	g1 = (p & RGB565_MASK_GREEN) >> 5;
+	b1 = (p & RGB565_MASK_BLUE);
+
+	r += r1 << 1;
+	g += g1;
+	b += b1 << 1;
+
+	offset = ((y + 1) * 320 * fb->scale + x + 1) * 2;
+	p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
+	r1 = (p & RGB565_MASK_RED) >> 11;
+	g1 = (p & RGB565_MASK_GREEN) >> 5;
+	b1 = (p & RGB565_MASK_BLUE);
+
+	r += r1 << 1;
+	g += g1;
+	b += b1 << 1;
+
+	p = RGB565(r, g, b);
+
+	return p;
+}
+
+void loadFrameBuffer_diff(framebuffer *fb){
+	int i, j, p;
 	int diffsx, diffsy, diffex, diffey;
+	unsigned long offset = 0;
 	int numdiff = 0;
-	int area;
 
-	buffer = (unsigned char *) malloc(xsize * ysize * 2);
-	fseek(infile, 0, 0);
-
-	if(fread(buffer, xsize * ysize * 2, sizeof(unsigned char), infile) != 1)
-		printf("Read < %d chars when loading file %s\n", hsize * vsize * 3, "ss");
-
-	LCD_WR_CMD(XS, diffsx); // Column address start2
-	LCD_WR_CMD(XE, diffex); // Column address end2
-	LCD_WR_CMD(YS, diffsy); // Row address start2
-	LCD_WR_CMD(YE, diffey); // Row address end2
-
-	LCD_WR_REG(0x22);
-	LCD_CS_CLR;
-	LCD_RS_SET;
-
-	for(i = 0; i < ysize; i++){
-		for(j = 0; j< xsize; j++){
-			diffmap[i][j] = 1;
-			drawmap[0][i][j] = 0;
-			LCD_WR_Data(0);
-			drawmap[1][i][j] = 255;
-		}
-	}
-
-	flag = 1;
+	framebuffer_read(fb);
 
 	while(!state){
-		// FIXME adding usleep to reduce CPU usage.
+		// Delay to reduce CPU saturation.
 		usleep(17000);
 
 		numdiff = 0;
-		flag = 1 - flag;
+		fb->flag = 1 - fb->flag;
 		diffex = diffey = 0;
 		diffsx = diffsy = 65535;
 
-		for(i = 0; i < ysize; i++){
-			for(j = 0; j < xsize; j++){
-				offset = (i * xsize + j) * 2;
-				p = (buffer[offset + 1] << 8) | buffer[offset];
+		for(i = 0; i < 240; i++){
+			for(j = 0; j < 320; j++){
+				switch(fb->scale){
+					case 2:
+						p = downscale(fb, j << 1, i << 1);
+						break;
+					default:
+						offset = (i * 320 * fb->scale + j) * 2;
+						p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
+				}
 
-				//drawmap[flag][i>>1][j>>1] = p;
-				if(drawmap[1 - flag][i][j] != p){
-					drawmap[flag][i][j] = p;
-					diffmap[i][j] = 1;
-					drawmap[1 - flag][i][j] = p;
+				if(fb->drawmap[1 - fb->flag][i][j] != p) {
+					fb->drawmap[fb->flag][i][j] = p;
+					fb->diffmap[i][j] = 1;
+					fb->drawmap[1 - fb->flag][i][j] = p;
 					numdiff++;
-					if((i) < diffsx)
+					if(i < diffsx)
 						diffsx = i;
-					if((i) > diffex)
-						diffex = i;
-					if((j) < diffsy)
+					if(i > diffex)
+						diffex = i; 
+					if(j < diffsy)
 						diffsy = j;
-					if((j) > diffey)
+					if(j > diffey)
 						diffey = j;
 
-				} else diffmap[i][j]=0;
+				} else fb->diffmap[i][j] = 0;
 			}
 		}
 
-		if(numdiff > 400){
-			// printf ("(%d, %d) - (%d, %d)\n",diffsx, diffsy, diffex, diffey);
+		LCD_WR_CMD(YS, diffsx); // Column address start2
+		LCD_WR_CMD(YE, diffex); // Column address end2
+		LCD_WR_CMD(XS, diffsy); // Row address start2
+		LCD_WR_CMD(XE, diffey); // Row address end2
 
-			area = ((abs(diffex - diffsx) + 1) * (1 + abs(diffey - diffsy)));
-			//printf("diff:%d, area:%d, cov:%f\n",numdiff, area,(1.0*numdiff)/area);
+		LCD_WR_CMD(XP, diffsy); // Column address start
+		LCD_WR_CMD(YP, diffsx); // Row address start
+
+		LCD_WR_REG(0x22);
+		LCD_CS_CLR;
+		LCD_RS_SET;
+
+		for(i = diffsx; i <= diffex; i++){
+			for(j = diffsy; j <= diffey; j++)
+				LCD_WR_Data(fb->drawmap[fb->flag][i][j]);
 		}
 
-		if(numdiff < 400){
-			for(i = diffsx; i <= diffex; i++){
-				for(j = diffsy; j <= diffey; j++){
-					if(diffmap[i][j] != 0)
-						write_dot(i, j, drawmap[flag][i][j]);
-				}
-			}
-			usleep(10L);
-		} else {
-			LCD_WR_CMD(YS,diffsx); // Column address start2
-			LCD_WR_CMD(YE,diffex); // Column address end2
-			LCD_WR_CMD(XS,diffsy); // Row address start2
-			LCD_WR_CMD(XE,diffey); // Row address end2
-
-			LCD_WR_CMD(XP,diffsy); // Column address start
-			LCD_WR_CMD(YP,diffsx); // Row address start
-			LCD_WR_REG(0x22);
-			LCD_CS_CLR;
-			LCD_RS_SET;
-
-			//printf ("(%d, %d) - (%d, %d)\n",diffsx, diffsy, diffex, diffey);
-			for(i = diffsx; i <= diffex; i++){
-				for(j = diffsy; j <= diffey; j++){
-					LCD_WR_Data(drawmap[flag][i][j]);
-				}
-			}
-		}
-
-		fseek(infile, 0, 0);
-		if(fread(buffer, xsize * ysize * 2, sizeof(unsigned char), infile) != 1)
-			printf("Read < %d chars when loading file %s\n", hsize * vsize * 3, "ss");
+		framebuffer_read(fb);
 	}
 }
 
@@ -448,6 +232,16 @@ void LCD_Init(){
 
 	//-------------- Panel Control -------------------//
 	LCD_WR_CMD(0x0007, 0x0173);		// 262K color and display ON
+
+	// FrameBuffer common setup code
+	LCD_WR_CMD(XS, 0x0000); // Column address start
+	LCD_WR_CMD(XE, MAX_X);  // Column address end
+	LCD_WR_CMD(YS, 0x0000); // Row address start
+	LCD_WR_CMD(YE, MAX_Y);  // Row address end
+
+	LCD_WR_REG(0x22);
+	LCD_CS_CLR;
+	LCD_RS_SET;
 }
 
 void LCD_test(){
@@ -500,7 +294,6 @@ void gracefulexit(int na){
 int main(int argc, char **argv){
 	int c, state = 0;
 	int displayMode = 0;
-	int quietMode = 0;
 	int runTest = 0;
 
 	while(!state && (c = getopt(argc, argv, "2t"))) switch(c){
@@ -555,10 +348,7 @@ int main(int argc, char **argv){
 		LCD_test();
 
 	signal(SIGUSR1, gracefulexit);
-
-	if(displayMode)
-		loadFrameBuffer_diff_320();
-	else loadFrameBuffer_diff();
+	loadFrameBuffer_diff((displayMode) ? framebuffer_create(320, 240, "/dev/fb0") : framebuffer_create(640, 480, "/dev/fb0"));
 
 	return 0;
 }

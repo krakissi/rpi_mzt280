@@ -56,7 +56,6 @@ uint32_t bcm2835_peri_read(volatile uint32_t *paddr){
 		// Make sure we dont return the _last_ read which might get lost
 		// if subsequent code changes to a different peripheral
 		uint32_t ret = *paddr;
-		uint32_t dummy = *paddr;
 		return ret;
 	}
 }
@@ -419,7 +418,7 @@ uint8_t bcm2835_spi_transfer(uint8_t value){
 	//delayMicroseconds(1);
 
 	// Read any byte that was sent back by the slave while we sere sending to it
-	uint32_t ret = bcm2835_peri_read_nb(fifo);
+	bcm2835_peri_read_nb(fifo);
 
 	// Set TA = 0, and also set the barrier
 	//bcm2835_peri_set_bits(paddr, 0, BCM2835_SPI0_CS_TA);
