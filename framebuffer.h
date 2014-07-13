@@ -1,25 +1,41 @@
 typedef struct framebuffer {
 	unsigned char *buffer;
-	int xsize, ysize;
+	int w, h;
 	FILE *infile;
 	long fp;
 	int drawmap[2][240][320];
 	int diffmap[240][320];
 	int flag;
-	int scale;
+	int mode;
 } framebuffer;
 
-framebuffer *framebuffer_create(int w, int h, const char *infilestr){
+framebuffer *framebuffer_create(int mode, const char *infilestr){
 	framebuffer *fb = malloc(sizeof(struct framebuffer));
 	FILE *infile = fopen(infilestr, "rb");
 	int i, j;
 
-	fb->xsize = w;
-	fb->ysize = h;
+	fb->w = 640;
+	fb->h = 480;
+	fb->mode = mode;
+	switch(mode){
+		// 320x240 native mode
+		case 2:
+			fb->w = 320;
+			fb->h = 240;
+			break;
+
+		// 640x480 single-sample mode (very lossy)
+		case 3:
+			break;
+
+		// 640x480 downsample mode
+		case 1:
+		default:
+			fb->mode = 1;
+	}
+	fb->buffer = malloc(fb->w * fb->h * 2);
 	fb->infile = infile;
-	fb->buffer = malloc(w * h * 2);
 	fb->flag = 1;
-	fb->scale = w / 320;
 
 	for(i = 0; i < 240; i++){
 		for(j = 0; j < 320; j++){
@@ -35,5 +51,5 @@ framebuffer *framebuffer_create(int w, int h, const char *infilestr){
 
 void framebuffer_read(framebuffer *fb){
 	fseek(fb->infile, 0, 0);
-	fread(fb->buffer, fb->xsize * fb->ysize * 2, sizeof(unsigned char), fb->infile);
+	fread(fb->buffer, fb->w * fb->h * 2, sizeof(unsigned char), fb->infile);
 }

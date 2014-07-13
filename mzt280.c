@@ -68,50 +68,52 @@ char state = 0;
 #include "lcd.h"
 #include "framebuffer.h"
 
+void setsample(int *r, int *g, int *b, int p){
+	*r = (p & RGB565_MASK_RED) >> 11;
+	*g = (p & RGB565_MASK_GREEN) >> 5;
+	*b = (p & RGB565_MASK_BLUE);
+}
+
 int downscale(framebuffer *fb, int x, int y){
 	int p, r, g, b, r1, g1, b1;
 	unsigned long offset = 0;
 
-	r = (p & RGB565_MASK_RED) >> 11;
-	g = (p & RGB565_MASK_GREEN) >> 5;
-	b = (p & RGB565_MASK_BLUE);
-
+	offset = (y * 640 + x) * 2;
+	p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
+	setsample(&r, &g, &b, p);
 	r <<= 1;
 	b <<= 1;
 
-	offset = ((y + 1) * 320 * fb->scale + x) * 2;
-	p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
-	r1 = (p & RGB565_MASK_RED) >> 11;
-	g1 = (p & RGB565_MASK_GREEN) >> 5;
-	b1 = (p & RGB565_MASK_BLUE);
+	if(fb->mode == 3){
+		// Ugly single-sample mode
+		r <<= 2;
+		g <<= 2;
+		b <<= 2;
+	} else {
+		// Blended sample mode.
+		offset = ((y + 1) * 640 + (x + 1)) * 2;
+		p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
+		setsample(&r1, &g1, &b1, p);
+		r += r1 << 1;
+		g += g1;
+		b += b1 << 1;
 
-	r += r1 << 1;
-	g += g1;
-	b += b1 << 1;
+		offset = ((y + 1) * 640 + x) * 2;
+		p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
+		setsample(&r1, &g1, &b1, p);
+		r += r1 << 1;
+		g += g1;
+		b += b1 << 1;
 
-	offset = (y * 320 * fb->scale + x + 1) * 2;
-	p= (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
-	r1 = (p & RGB565_MASK_RED) >> 11;
-	g1 = (p & RGB565_MASK_GREEN) >> 5;
-	b1 = (p & RGB565_MASK_BLUE);
+		offset = (y * 640 + (x + 1)) * 2;
+		p= (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
+		setsample(&r1, &g1, &b1, p);
+		r += r1 << 1;
+		g += g1;
+		b += b1 << 1;
+	}
 
-	r += r1 << 1;
-	g += g1;
-	b += b1 << 1;
-
-	offset = ((y + 1) * 320 * fb->scale + x + 1) * 2;
-	p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
-	r1 = (p & RGB565_MASK_RED) >> 11;
-	g1 = (p & RGB565_MASK_GREEN) >> 5;
-	b1 = (p & RGB565_MASK_BLUE);
-
-	r += r1 << 1;
-	g += g1;
-	b += b1 << 1;
-
-	p = RGB565(r, g, b);
-
-	return p;
+	return RGB565(r, g, b);
 }
 
 void loadFrameBuffer_diff(framebuffer *fb){
@@ -133,13 +135,15 @@ void loadFrameBuffer_diff(framebuffer *fb){
 
 		for(i = 0; i < 240; i++){
 			for(j = 0; j < 320; j++){
-				switch(fb->scale){
+				switch(fb->mode){
 					case 2:
+						offset = (i * 320 + j) * 2;
+						p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
+						break;
+
+					default:
 						p = downscale(fb, j << 1, i << 1);
 						break;
-					default:
-						offset = (i * 320 * fb->scale + j) * 2;
-						p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
 				}
 
 				if(fb->drawmap[1 - fb->flag][i][j] != p) {
@@ -259,10 +263,8 @@ void LCD_test(){
 	for(n = 0; n < 8; n++){
 		temp = color[n];
 
-		// FIXME: inline might break without block curlies.
-		for(num = 40 * 240; num > 0; num--){
+		for(num = 40 * 240; num > 0; num--)
 			LCD_WR_Data(temp);
-		}
 	}
 
 	for(n = 0; n < 8; n++){
@@ -275,12 +277,10 @@ void LCD_test(){
 		LCD_CS_CLR;
 		LCD_RS_SET;
 		temp = color[n];
-		for(i = 0; i < 240; i++){
-			// FIXME: inline might break without block curlies.
-			for(num = 0; num < 320; num++){
+
+		for(i = 0; i < 240; i++)
+			for(num = 0; num < 320; num++)
 		  		LCD_WR_Data(temp);
-			}
-		}
 	}
 	LCD_CS_SET;
 }
@@ -292,13 +292,15 @@ void gracefulexit(int na){
 }
 
 int main(int argc, char **argv){
-	int c, state = 0;
 	int displayMode = 0;
+	int c, state = 0;
 	int runTest = 0;
 
-	while(!state && (c = getopt(argc, argv, "2t"))) switch(c){
+	while(!state && (c = getopt(argc, argv, "123t"))) switch(c){
+		case '1':
 		case '2':
-			displayMode = 1;
+		case '3':
+			displayMode = c - '0';
 			break;
 		case 't':
 			runTest = 1;
@@ -311,10 +313,11 @@ int main(int argc, char **argv){
 			state = 2;
 	}
 	if(state == 2){
-		// FIXME useful message
 		fprintf(stderr,
 			"Usage:\t%s [flags]\n"
-			"\t2 - 320x240 mode (default 640x480)\n"
+			"\t1 - downsample 640x480 mode (default)\n"
+			"\t2 - native 320x240 mode\n"
+			"\t3 - ugly/fast downsample 640x480 mode\n"
 			"\tt - Run display test at startup\n"
 			"\n",
 			*argv
@@ -338,9 +341,6 @@ int main(int argc, char **argv){
 	bcm2835_spi_setDataMode(BCM2835_SPI_MODE3);
 	bcm2835_spi_setClockDivider(BCM2835_SPI_CLOCK_DIVIDER_2);
 
-	//bcm2835_spi_chipSelect(BCM2835_SPI_CS1);
-	//bcm2835_spi_setChipSelectPolarity(BCM2835_SPI_CS1,LOW);
-
 	LCD_PWM_CLR;
 	LCD_Init();
 
@@ -348,7 +348,7 @@ int main(int argc, char **argv){
 		LCD_test();
 
 	signal(SIGUSR1, gracefulexit);
-	loadFrameBuffer_diff((displayMode) ? framebuffer_create(320, 240, "/dev/fb0") : framebuffer_create(640, 480, "/dev/fb0"));
+	loadFrameBuffer_diff(framebuffer_create(displayMode, "/dev/fb0"));
 
 	return 0;
 }
