@@ -7,7 +7,7 @@ update: all
 	sudo mzt280 &
 
 # Display program
-mzt280: mzt280.c 8x16.h bcm2835.o
+mzt280: mzt280.c bcm2835.o
 	gcc -o mzt280 -l rt mzt280.c bcm2835.o
 
 # Broadcom interface object

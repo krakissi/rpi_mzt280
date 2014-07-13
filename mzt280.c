@@ -5,9 +5,6 @@
 #include <string.h>
 #include <sys/timeb.h>
 
-#include "8x16.h"
-#include "qqp_arm.h"
-
 #define RGB565(r,g,b)((r >> 3) << 11 | (g >> 2) << 5 | ( b >> 3))
 #define BCM2708SPI
 #define ROTATE90
@@ -454,73 +451,6 @@ void LCD_Init(){
 	LCD_WR_CMD(0x0007, 0x0173);		// 262K color and display ON
 }
 
-// FIXME unused, maybe for portrait mode.
-void LCD_QQ1(){
-	int num;
-	short *p;
-	int  c,g;
-
-   	for(g = 0;g < 6; g++){
-		for(c = 0; c < 8; c++){
-			LCD_WR_CMD(XE, 319 - c * 40);
-			LCD_WR_CMD(YE, 239 - g * 40);
-			LCD_WR_CMD(XS, 319 - (c * 40 + 39));
-			LCD_WR_CMD(YS, 239 - (g * 40 + 39));
-
-			LCD_WR_CMD(XP, 319 - c * 40 - 39);
-			LCD_WR_CMD(YP, 239 - g * 40 - 39);
-
-			LCD_WR_REG(0x22);
-			LCD_CS_CLR;
-			LCD_RS_SET;
-
-			// FIXME: unused?
-			p = (short*) gImage_qqp;
-
-			// FIXME: inline might break without block curlies.
-   			for(num = 0; num < 1600; num++){
-				LCD_WR_Data(*p++);
-			}
-
-			usleep(700L);
-		}
-  	}
-	LCD_CS_SET;
-}
-
-void LCD_QQ(){
-	int num;
-	short *p;
-	int  c,g;
-
-   	for(g = 0; g < 6;g++){
-		for(c = 0; c < 8; c++){
-			LCD_WR_CMD(XS, c * 40);
-			LCD_WR_CMD(YS, g * 40);
-			LCD_WR_CMD(XE, (c * 40 + 39));
-			LCD_WR_CMD(YE, (g * 40 + 39));
-
-			LCD_WR_CMD(XP, c * 40);
-			LCD_WR_CMD(YP, g * 40);
-
-			LCD_WR_REG(0x22);
-			LCD_CS_CLR;
-			LCD_RS_SET;
-
-			// FIXME: unused?
-			p = (short*) gImage_qqp;
-
-			// FIXME: inline might break without block curlies.
-   			for(num=0;num<1600;num++){
-				LCD_WR_Data(*p++);
-			}
-
-			usleep(700L);
-		}
-  	}
-	LCD_CS_SET;
-}
-
 void LCD_test(){
 	int temp, num, i;
 	char n;
@@ -616,10 +546,8 @@ int main(int argc, char **argv){
 	LCD_PWM_CLR;
 	LCD_Init();
 
-	if(runTest){
+	if(runTest)
 		LCD_test();
-		LCD_QQ();
-	}
 
 	if(displayMode)
 		loadFrameBuffer_diff_320();
