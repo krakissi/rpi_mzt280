@@ -9,35 +9,21 @@
 
 #define RGB565(r, g, b) ((r >> 3) << 11 | (g >> 2) << 5 | ( b >> 3))
 #define BCM2708SPI
-#define ROTATE90
 
 #define RGB565_MASK_RED   0xF800
 #define RGB565_MASK_GREEN 0x07E0
 #define RGB565_MASK_BLUE  0x001F
 
-#ifdef ROTATE90
-	#define XP 0x021
-	#define YP 0x020
+#define XP 0x021
+#define YP 0x020
 
-	#define XS 0x052
-	#define XE 0x053
-	#define YS 0x050
-	#define YE 0x051
+#define XS 0x052
+#define XE 0x053
+#define YS 0x050
+#define YE 0x051
 
-	#define MAX_X 319
-	#define MAX_Y 239
-#else
-	#define XP 0x020
-	#define YP 0x021
-
-	#define XS 0x050
-	#define XE 0x051
-	#define YS 0x052
-	#define YE 0x053
-
-	#define MAX_X 239
-	#define MAX_Y 319
-#endif
+#define MAX_X 319
+#define MAX_Y 239
 
 #define	SPICS  RPI_GPIO_P1_24 //GPIO08
 #define	SPIRS  RPI_GPIO_P1_22 //GPIO25
@@ -69,20 +55,18 @@ char state = 0;
 #include "framebuffer.h"
 
 void setsample(int *r, int *g, int *b, int p){
-	*r = (p & RGB565_MASK_RED) >> 11;
-	*g = (p & RGB565_MASK_GREEN) >> 5;
-	*b = (p & RGB565_MASK_BLUE);
+	*r += (p & RGB565_MASK_RED) >> 11 << 1;
+	*g += (p & RGB565_MASK_GREEN) >> 5;
+	*b += (p & RGB565_MASK_BLUE) << 1;
 }
 
 int downscale(framebuffer *fb, int x, int y){
-	int p, r, g, b, r1, g1, b1;
+	int p, r = 0, g = 0, b = 0;
 	unsigned long offset = 0;
 
 	offset = (y * 640 + x) * 2;
 	p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
 	setsample(&r, &g, &b, p);
-	r <<= 1;
-	b <<= 1;
 
 	if(fb->mode == 3){
 		// Ugly single-sample mode
@@ -91,26 +75,18 @@ int downscale(framebuffer *fb, int x, int y){
 		b <<= 2;
 	} else {
 		// Blended sample mode.
+		// FIXME there has to be a more efficient way to get the offset
 		offset = ((y + 1) * 640 + (x + 1)) * 2;
 		p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
-		setsample(&r1, &g1, &b1, p);
-		r += r1 << 1;
-		g += g1;
-		b += b1 << 1;
+		setsample(&r, &g, &b, p);
 
 		offset = ((y + 1) * 640 + x) * 2;
 		p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
-		setsample(&r1, &g1, &b1, p);
-		r += r1 << 1;
-		g += g1;
-		b += b1 << 1;
+		setsample(&r, &g, &b, p);
 
 		offset = (y * 640 + (x + 1)) * 2;
-		p= (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
-		setsample(&r1, &g1, &b1, p);
-		r += r1 << 1;
-		g += g1;
-		b += b1 << 1;
+		p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
+		setsample(&r, &g, &b, p);
 	}
 
 	return RGB565(r, g, b);
@@ -133,11 +109,11 @@ void loadFrameBuffer_diff(framebuffer *fb){
 		diffex = diffey = 0;
 		diffsx = diffsy = 65535;
 
-		for(i = 0; i < 240; i++){
-			for(j = 0; j < 320; j++){
+		for(i = 0; i <= MAX_Y; i++){
+			for(j = 0; j <= MAX_X; j++){
 				switch(fb->mode){
 					case 2:
-						offset = (i * 320 + j) * 2;
+						offset = (i * (MAX_X + 1) + j) * 2;
 						p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
 						break;
 

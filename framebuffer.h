@@ -3,8 +3,8 @@ typedef struct framebuffer {
 	int w, h;
 	FILE *infile;
 	long fp;
-	int drawmap[2][240][320];
-	int diffmap[240][320];
+	int drawmap[2][MAX_Y + 1][MAX_X + 1];
+	int diffmap[MAX_Y + 1][MAX_X + 1];
 	int flag;
 	int mode;
 } framebuffer;
@@ -14,14 +14,14 @@ framebuffer *framebuffer_create(int mode, const char *infilestr){
 	FILE *infile = fopen(infilestr, "rb");
 	int i, j;
 
-	fb->w = 640;
-	fb->h = 480;
+	fb->w = 2 * (MAX_X + 1);
+	fb->h = 2 * (MAX_Y + 1);
 	fb->mode = mode;
 	switch(mode){
 		// 320x240 native mode
 		case 2:
-			fb->w = 320;
-			fb->h = 240;
+			fb->w = MAX_X + 1;
+			fb->h = MAX_Y + 1;
 			break;
 
 		// 640x480 single-sample mode (very lossy)
@@ -37,8 +37,8 @@ framebuffer *framebuffer_create(int mode, const char *infilestr){
 	fb->infile = infile;
 	fb->flag = 1;
 
-	for(i = 0; i < 240; i++){
-		for(j = 0; j < 320; j++){
+	for(i = 0; i <= MAX_Y; i++){
+		for(j = 0; j <= MAX_X; j++){
 			fb->diffmap[i][j] = 1;
 			fb->drawmap[0][i][j] = 0;
 			LCD_WR_Data(0);
