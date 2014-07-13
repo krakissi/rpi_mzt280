@@ -56,19 +56,20 @@ char state = 0;
 #include "lcd.h"
 #include "framebuffer.h"
 
-void setsample(int *r, int *g, int *b, int p){
+void setsample(int *r, int *g, int *b, framebuffer *fb, unsigned long offset){
+	int p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
+
 	*r += (p & RGB565_MASK_RED) >> 11 << 1;
 	*g += (p & RGB565_MASK_GREEN) >> 5;
 	*b += (p & RGB565_MASK_BLUE) << 1;
 }
 
 int downscale(framebuffer *fb, int x, int y){
-	int p, r = 0, g = 0, b = 0;
 	unsigned long offset = 0;
+	int r = 0, g = 0, b = 0;
 
 	offset = (y * 2 * DISP_W + x) * 2;
-	p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
-	setsample(&r, &g, &b, p);
+	setsample(&r, &g, &b, fb, offset);
 
 	if(fb->mode == 3){
 		// Ugly single-sample mode
@@ -77,18 +78,14 @@ int downscale(framebuffer *fb, int x, int y){
 		b <<= 2;
 	} else {
 		// Blended sample mode.
-		// FIXME there has to be a more efficient way to get the offset
-		offset = ((y + 1) * 2 * DISP_W + (x + 1)) * 2;
-		p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
-		setsample(&r, &g, &b, p);
+		offset += 2;
+		setsample(&r, &g, &b, fb, offset);
 
-		offset = ((y + 1) * 2 * DISP_W + x) * 2;
-		p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
-		setsample(&r, &g, &b, p);
+		offset += 4 * DISP_W;
+		setsample(&r, &g, &b, fb, offset);
 
-		offset = (y * 2 * DISP_W + (x + 1)) * 2;
-		p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
-		setsample(&r, &g, &b, p);
+		offset -= 2;
+		setsample(&r, &g, &b, fb, offset);
 	}
 
 	return RGB565(r, g, b);
