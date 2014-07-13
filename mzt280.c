@@ -158,7 +158,7 @@ void loadFrameBuffer_diff(){
 
 	while(1){
 		// FIXME adding usleep to reduce CPU usage.
-		usleep(100);
+		usleep(17000);
 
 		numdiff = 0;
 		flag = 1 - flag;
@@ -321,7 +321,7 @@ void loadFrameBuffer_diff_320(){
 
 	while(1){
 		// FIXME adding usleep to reduce CPU usage.
-		usleep(100);
+		usleep(17000);
 
 		numdiff = 0;
 		flag = 1 - flag;

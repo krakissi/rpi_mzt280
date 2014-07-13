@@ -4,3 +4,39 @@ rpi_mzt280
 Display driver system for the Tontec 2.8" LCD on Raspberry Pi.
 
 Code based entirely upon the provided display software.
+
+Setup instructions:
+	Clone this repository if you haven't already downloaded it:
+
+		git clone http://github.com/krakissi/rpi_mzt280.git
+
+	Build the tool:
+
+		make && sudo make install
+
+	You will need to manually set the framebuffer size for your terminal
+	and start mzt280 when you want the display to work. You have your
+	choice of either 640x480 downsampled mode, or 320x240 native.
+
+	FOR 320x240 MODE:
+
+	/boot/config.txt - Add/edit these lines:
+		framebuffer_width=320
+		framebuffer_height=240
+
+	/etc/rc.local - Add this line before "exit 0"
+		/usr/bin/mzt280 -2 &
+
+
+	FOR 640x480 MODE:
+
+	/boot/config.txt - Add/edit these lines:
+		framebuffer_width=640
+		framebuffer_height=480
+
+	/etc/rc.local - Add this line before "exit 0"
+		/usr/bin/mzt280 &
+
+
+
+"Oh god I'm so confused!" Ask for help at https://chat.krakissi.net/.

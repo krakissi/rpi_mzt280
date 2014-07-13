@@ -1,5 +1,9 @@
 all: mzt280
 
+# Copy the binary to /usr/bin
+install: all
+	cp mzt280 /usr/bin/
+
 # Kill running software, patch, and restart
 update: all
 	@sudo killall mzt280 || echo "No process, no problem."
