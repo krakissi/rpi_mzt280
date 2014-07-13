@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <signal.h>
 #include <sys/timeb.h>
 
 #define RGB565(r, g, b) ((r >> 3) << 11 | (g >> 2) << 5 | ( b >> 3))
@@ -64,6 +65,9 @@ short color[] = { 0xf800, 0x07e0, 0x001f, 0xffe0, 0x0000, 0xffff, 0x07ff, 0xf81f
 char *value = NULL;
 int hsize = 0, vsize = 0;
 
+/* Global State for Graceful Exits */
+char state = 0;
+
 void LCD_WR_REG(int index){
 	LCD_CS_CLR;
 	LCD_RS_CLR;
@@ -74,7 +78,7 @@ void LCD_WR_REG(int index){
 	LCD_CS_SET;
 }
 
-void LCD_WR_CMD(int index,int val){
+void LCD_WR_CMD(int index, int val){
 	LCD_CS_CLR;
 	LCD_RS_CLR;
 
@@ -156,7 +160,7 @@ void loadFrameBuffer_diff(){
 
 	flag = 1;
 
-	while(1){
+	while(!state){
 		// FIXME adding usleep to reduce CPU usage.
 		usleep(17000);
 
@@ -319,7 +323,7 @@ void loadFrameBuffer_diff_320(){
 
 	flag = 1;
 
-	while(1){
+	while(!state){
 		// FIXME adding usleep to reduce CPU usage.
 		usleep(17000);
 
@@ -467,7 +471,7 @@ void LCD_test(){
 		}
 	}
 
-	for(n=0;n<8;n++){
+	for(n = 0; n < 8; n++){
 		LCD_WR_CMD(XS, 0x0000); // Column address start2
 		LCD_WR_CMD(XE, MAX_X); // Column address end2
 		LCD_WR_CMD(YS, 0x0000); // Row address start2
@@ -485,6 +489,12 @@ void LCD_test(){
 		}
 	}
 	LCD_CS_SET;
+}
+
+/* Sets the state variable true, which should signal framebuffer loops to exit
+ * when convenient. */
+void gracefulexit(int na){
+	state |= 0x1;
 }
 
 int main(int argc, char **argv){
@@ -543,6 +553,8 @@ int main(int argc, char **argv){
 
 	if(runTest)
 		LCD_test();
+
+	signal(SIGUSR1, gracefulexit);
 
 	if(displayMode)
 		loadFrameBuffer_diff_320();
