@@ -98,7 +98,7 @@ void loadFrameBuffer_diff(framebuffer *fb){
 			}
 		}
 
-		if(diff_count < (DISP_W * DISP_H / 4)){
+		if(diff_count < (DISP_W * DISP_H / 8)){
 			// For small updates, writing individual dots looks better.
 			for(i = 0; i <= MAX_Y; i++)
 				for(j = 0; j <= MAX_X; j++)
