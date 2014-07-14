@@ -1,12 +1,11 @@
+#define DOTTED_DRAW_SIZE (DISP_W * DISP_H / 2)
+
 typedef struct framebuffer {
-	unsigned char *buffer;
-	int w, h;
-	FILE *infile;
-	long fp;
 	int drawmap[2][DISP_H][DISP_W];
-	int diffmap[DISP_H][DISP_W];
-	int flag;
-	int mode;
+	int diffmap[2][DOTTED_DRAW_SIZE];
+	unsigned char *buffer;
+	int w, h, flag, mode;
+	FILE *infile;
 } framebuffer;
 
 framebuffer *framebuffer_create(int mode, const char *infilestr){
@@ -39,7 +38,6 @@ framebuffer *framebuffer_create(int mode, const char *infilestr){
 
 	for(i = 0; i <= MAX_Y; i++){
 		for(j = 0; j <= MAX_X; j++){
-			fb->diffmap[i][j] = 1;
 			fb->drawmap[0][i][j] = 0;
 			LCD_WR_Data(0);
 			fb->drawmap[1][i][j] = 255;

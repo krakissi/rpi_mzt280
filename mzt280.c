@@ -53,6 +53,7 @@ void loadFrameBuffer_diff(framebuffer *fb){
 	int diffsx, diffsy, diffex, diffey;
 	unsigned long offset = 0;
 	long diff_count;
+	long diff_pos;
 	int i, j, p;
 
 	long dtime;
@@ -75,6 +76,7 @@ void loadFrameBuffer_diff(framebuffer *fb){
 		// Switch buffer planes
 		fb->flag = 1 - fb->flag;
 
+		diff_pos = 0L;
 		diff_count = 0L;
 		diffex = diffey = 0;
 		diffsx = diffsy = 65535;
@@ -94,9 +96,14 @@ void loadFrameBuffer_diff(framebuffer *fb){
 
 				if(fb->drawmap[1 - fb->flag][i][j] != p) {
 					fb->drawmap[fb->flag][i][j] = p;
-					fb->diffmap[i][j] = 1;
 					fb->drawmap[1 - fb->flag][i][j] = p;
-					diff_count++;
+
+					// Maintain a small list of diff coords.
+					if(diff_count++ < DOTTED_DRAW_SIZE){
+						fb->diffmap[0][diff_pos] = i;
+						fb->diffmap[1][diff_pos] = j;
+						diff_pos++;
+					}
 
 					if(i < diffsx)
 						diffsx = i;
@@ -106,17 +113,19 @@ void loadFrameBuffer_diff(framebuffer *fb){
 						diffsy = j;
 					if(j > diffey)
 						diffey = j;
-				} else fb->diffmap[i][j] = 0;
+				}
 			}
 		}
 
-		if(diff_count < (DISP_W * DISP_H / 8)){
-			// For small updates, writing individual dots looks better.
-			for(i = 0; i <= MAX_Y; i++)
-				for(j = 0; j <= MAX_X; j++)
-					if(fb->diffmap[i][j])
-						write_dot(i, j, fb->drawmap[fb->flag][i][j]);
-		} else {
+		// Signal the end of the diff block.
+		if(diff_pos < DOTTED_DRAW_SIZE)
+			fb->diffmap[0][diff_pos] = -1;
+
+		// Diff block magic. Changed coordinates are saved in memory.
+		if(diff_count && (diff_count <= DOTTED_DRAW_SIZE))
+			for(diff_pos = 0; ((i = fb->diffmap[0][diff_pos]) != -1) && (diff_pos < DOTTED_DRAW_SIZE); diff_pos++)
+				write_dot(i, (j = fb->diffmap[1][diff_pos]), fb->drawmap[fb->flag][i][j]);
+		else {
 			// Large area writes are faster than single dots. Needed for big delta.
 			LCD_WR_CMD(YS, diffsx); // Column address start
 			LCD_WR_CMD(YE, diffex); // Column address end
