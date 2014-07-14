@@ -5,6 +5,7 @@
 #include <string.h>
 #include <signal.h>
 #include <sys/timeb.h>
+#include <time.h>
 
 /* Global State for Graceful Exits */
 char state = 0;
@@ -54,11 +55,22 @@ void loadFrameBuffer_diff(framebuffer *fb){
 	long diff_count;
 	int i, j, p;
 
+	long dtime;
+	struct timespec time_last, time_cur;
+	time_last = (struct timespec){ 0, 0 };
+
 	framebuffer_read(fb);
 
 	while(!state){
-		// Delay to save CPU
-		usleep(17000L);
+		clock_gettime(CLOCK_REALTIME, &time_cur);
+		if(time_cur.tv_sec - time_last.tv_sec <= 1){
+			dtime = 100000L - ((time_cur.tv_sec - time_last.tv_sec) * 1e6L + (time_cur.tv_nsec - time_last.tv_nsec) / 1e3L);
+
+			// Delay to save CPU
+			if(dtime > 0)
+				usleep(dtime);
+		}
+		time_last = time_cur;
 
 		// Switch buffer planes
 		fb->flag = 1 - fb->flag;

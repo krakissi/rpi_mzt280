@@ -1,4 +1,4 @@
-CC=gcc -s -Wunused
+CC=gcc -s -Wunused -O3
 
 all: mzt280
 
