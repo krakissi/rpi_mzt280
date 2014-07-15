@@ -27,6 +27,16 @@ framebuffer *framebuffer_create(int mode, const char *infilestr){
 		case 3:
 			break;
 
+		// 640x480 interlaced mode
+		case 4:
+		case 5:
+			break;
+
+		// 640x480 checkboard mode
+		case 6:
+		case 7:
+			break;
+
 		// 640x480 downsample mode
 		case 1:
 		default:

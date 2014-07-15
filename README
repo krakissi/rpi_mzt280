@@ -43,3 +43,40 @@ Setup instructions:
 
 	"Oh god I'm so confused!" Ask for help at
 	https://chat.krakissi.net/.
+
+
+
+AVAILABLE VIDEO MODES:
+
+	Once you're set up, you might want to experiment with some of the
+	varying video modes which are available in this driver. Simply set
+	the flag corresponding to the mode in your call to mzt280 in
+	/etc/rc.local to use that mode.
+
+	e.g. for mode 6, your line in /etc/rc.local would look like:
+		/usr/bin/mzt280 -6 &
+
+
+	-1  -  640x480, blended downsample mode (default)
+	-2  -  320x240, native mode
+	-3  -  640x480, ugly/fast downsample mode
+	-4  -  640x480, interlaced, blended downsample mode
+	-5  -  640x480, interlaced, uglier/faster downsample mode
+	-6  -  640x480, checkerboard interlace, blended downsample mode
+	-7  -  640x480, checkerboard interlace, ugliest/fastest downsample mode
+
+
+	In general, the higher numbered modes are faster, however they may
+	provide increasingly inaccurate images.
+
+	Ugly/fast modes are useful for games. They take only one pixel from
+	each 2x2 sample block in the downsampling process. The result is
+	inaccurate, but close enough for graphics. Text will look extremely
+	bizarre. Modes 3 and 7 are my favorites.
+
+	Interlaced modes alternate odd and even horizontal scanlines per
+	frame. This is cuts the render time for each frame in half, but
+	causes obvious horizontal tearing and sync issues.
+
+	Checkerboard interlace uses diagonal lines instead of horizontal
+	scanlines for the same process.

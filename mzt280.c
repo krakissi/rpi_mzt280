@@ -29,12 +29,17 @@ int downscale(framebuffer *fb, int x, int y){
 	offset = (y * 2 * DISP_W + x) * 2;
 	setsample(&r, &g, &b, fb, offset);
 
-	if(fb->mode == 3){
+	switch(fb->mode){
+	case 3:
+	case 5:
+	case 7:
 		// Ugly single-sample mode
 		r <<= 2;
 		g <<= 2;
 		b <<= 2;
-	} else {
+		break;
+
+	default:
 		// Blended sample mode.
 		offset += 2;
 		setsample(&r, &g, &b, fb, offset);
@@ -52,6 +57,7 @@ int downscale(framebuffer *fb, int x, int y){
 void loadFrameBuffer_diff(framebuffer *fb){
 	int diffsx, diffsy, diffex, diffey;
 	unsigned long offset = 0;
+	int interlace_set = 0;
 	long diff_count;
 	long diff_pos;
 	int i, j, p;
@@ -76,12 +82,20 @@ void loadFrameBuffer_diff(framebuffer *fb){
 		// Switch buffer planes
 		fb->flag = 1 - fb->flag;
 
+		// Swap interlace scanlines
+		interlace_set = 1 - interlace_set;
+
 		diff_pos = 0L;
 		diff_count = 0L;
 		diffex = diffey = 0;
 		diffsx = diffsy = 65535;
 
 		for(i = 0; i <= MAX_Y; i++){
+			if((fb->mode == 4) && (i % 2 == interlace_set))
+				continue;
+			else if((fb->mode == 6) || (fb->mode == 7))
+				interlace_set = 1 - interlace_set;
+
 			for(j = 0; j <= MAX_X; j++){
 				switch(fb->mode){
 					case 2:
@@ -89,6 +103,12 @@ void loadFrameBuffer_diff(framebuffer *fb){
 						p = (fb->buffer[offset + 1] << 8) | fb->buffer[offset];
 						break;
 
+					case 6:
+					case 7:
+						// Checkerboard mode
+						interlace_set = 1 - interlace_set;
+						if(interlace_set)
+							continue;
 					default:
 						p = downscale(fb, j << 1, i << 1);
 						break;
@@ -158,10 +178,14 @@ int main(int argc, char **argv){
 	int c, state = 0;
 	int runTest = 0;
 
-	while(!state && (c = getopt(argc, argv, "123t"))) switch(c){
+	while(!state && (c = getopt(argc, argv, "1234567t"))) switch(c){
 		case '1':
 		case '2':
 		case '3':
+		case '4':
+		case '5':
+		case '6':
+		case '7':
 			displayMode = c - '0';
 			break;
 		case 't':
@@ -180,6 +204,10 @@ int main(int argc, char **argv){
 			"\t1 - downsample 640x480 mode (default)\n"
 			"\t2 - native 320x240 mode\n"
 			"\t3 - ugly/fast downsample 640x480 mode\n"
+			"\t4 - downsample interlaced 640x480 mode\n"
+			"\t5 - uglier/faster downsample interlaced 640x480 mode\n"
+			"\t6 - checkerboard downsample interlaced 640x480 mode\n"
+			"\t7 - ugliest/fastest checkerboard downsample interlaced 640x480 mode\n"
 			"\tt - Run display test at startup\n"
 			"\n",
 			*argv
