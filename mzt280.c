@@ -144,7 +144,7 @@ void loadFrameBuffer_diff(framebuffer *fb){
 		// Diff block magic. Changed coordinates are saved in memory.
 		if(diff_count && (diff_count <= DOTTED_DRAW_SIZE))
 			for(diff_pos = 0; ((i = fb->diffmap[0][diff_pos]) != -1) && (diff_pos < DOTTED_DRAW_SIZE); diff_pos++)
-				write_dot(i, (j = fb->diffmap[1][diff_pos]), fb->drawmap[fb->flag][i][j]);
+				write_dot(fb->invert ? (MAX_Y - i) : i, ((j = fb->diffmap[1][diff_pos]), fb->invert ? (MAX_X - j) : j), fb->drawmap[fb->flag][i][j]);
 		else {
 			// Large area writes are faster than single dots. Needed for big delta.
 			LCD_WR_CMD(YS, diffsx); // Column address start
@@ -161,7 +161,7 @@ void loadFrameBuffer_diff(framebuffer *fb){
 
 			for(i = diffsx; i <= diffex; i++)
 				for(j = diffsy; j <= diffey; j++)
-					LCD_WR_Data(fb->drawmap[fb->flag][i][j]);
+					LCD_WR_Data(fb->drawmap[fb->flag][fb->invert ? (MAX_Y - i) : i][fb->invert ? (MAX_X - j) : j]);
 		}
 		framebuffer_read(fb);
 	}
@@ -177,8 +177,9 @@ int main(int argc, char **argv){
 	int displayMode = 0;
 	int c, state = 0;
 	int runTest = 0;
+	int invert = 0;
 
-	while(!state && (c = getopt(argc, argv, "1234567t"))) switch(c){
+	while(!state && (c = getopt(argc, argv, "1234567tv"))) switch(c){
 		case '1':
 		case '2':
 		case '3':
@@ -190,6 +191,9 @@ int main(int argc, char **argv){
 			break;
 		case 't':
 			runTest = 1;
+			break;
+		case 'v':
+			invert = 1;
 			break;
 
 		case -1:
@@ -208,6 +212,7 @@ int main(int argc, char **argv){
 			"\t5 - uglier/faster downsample interlaced 640x480 mode\n"
 			"\t6 - checkerboard downsample interlaced 640x480 mode\n"
 			"\t7 - ugliest/fastest checkerboard downsample interlaced 640x480 mode\n"
+			"\tv - \"Invert Mode,\" rotate screen 180 degrees\n"
 			"\tt - Run display test at startup\n"
 			"\n",
 			*argv
@@ -238,7 +243,9 @@ int main(int argc, char **argv){
 		LCD_test();
 
 	signal(SIGUSR1, gracefulexit);
-	loadFrameBuffer_diff(framebuffer_create(displayMode, "/dev/fb0"));
+
+	// OR in options (i.e., FRAMEBUFFER_INVERT_VIDEO)
+	loadFrameBuffer_diff(framebuffer_create(displayMode | (invert  ? FRAMEBUFFER_INVERT_VIDEO : 0), "/dev/fb0"));
 
 	return 0;
 }

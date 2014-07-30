@@ -80,3 +80,10 @@ AVAILABLE VIDEO MODES:
 
 	Checkerboard interlace uses diagonal lines instead of horizontal
 	scanlines for the same process.
+
+ROTATING THE SCREEN:
+
+	Any video mode may be rotated 180 degrees by adding the -v flag to
+	your mzt280 call:
+
+		/usr/bin/mzt280 -2 -v &

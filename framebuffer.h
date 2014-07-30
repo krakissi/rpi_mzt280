@@ -1,10 +1,11 @@
 #define DOTTED_DRAW_SIZE (DISP_W * DISP_H / 2)
+#define FRAMEBUFFER_INVERT_VIDEO 0x40
 
 typedef struct framebuffer {
 	int drawmap[2][DISP_H][DISP_W];
 	int diffmap[2][DOTTED_DRAW_SIZE];
+	int w, h, flag, mode, invert;
 	unsigned char *buffer;
-	int w, h, flag, mode;
 	FILE *infile;
 } framebuffer;
 
@@ -12,6 +13,10 @@ framebuffer *framebuffer_create(int mode, const char *infilestr){
 	framebuffer *fb = malloc(sizeof(struct framebuffer));
 	FILE *infile = fopen(infilestr, "rb");
 	int i, j;
+
+	// Get the invert flag from the display mode and then clear it out.
+	fb->invert = mode & FRAMEBUFFER_INVERT_VIDEO;
+	mode &= ~FRAMEBUFFER_INVERT_VIDEO;
 
 	fb->w = 2 * DISP_W;
 	fb->h = 2 * DISP_H;
